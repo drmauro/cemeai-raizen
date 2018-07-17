@@ -2,9 +2,8 @@
 require(cluster)
 require(parallel)
 
-cluster <- function(data) {
+cluster <- function(data, k) {
 
-    k = seq(2, 100, by=1)
     aux = mclapply(k, mc.cores=4, function(i) {
         sil = sapply(1:10, function(j) {
             tmp = kmeans(data, i)
@@ -32,12 +31,12 @@ scatter <- function(data) {
     plot(data[,1:tmp])
 }
 
-main <- function(file) {
+main <- function(file, k=seq(2, 100, by=1)) {
 
     data = scale(read.csv(file, sep=";"))
 
     # clustering
-    aux = cluster(data)
+    aux = cluster(data, k)
     silhouete(unlist(aux), which.max(aux))
 
     # pca analysis
