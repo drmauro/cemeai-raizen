@@ -32,9 +32,9 @@ scatter <- function(data) {
     plot(data[,1:tmp])
 }
 
-main <- function() {
+main <- function(file) {
 
-    data = scale(read.csv("data/raizen_preprocessed.csv", sep=";"))
+    data = scale(read.csv(file, sep=";"))
 
     # clustering
     aux = cluster(data)
@@ -46,3 +46,5 @@ main <- function() {
 }
 
 
+#execute
+main(file)
