@@ -1,6 +1,7 @@
 require(e1071)
 require(kknn)
 require(randomForest)
+require(RWeka)
 
 MLP = make_Weka_classifier("weka/classifiers/functions/MultilayerPerceptron")
 
@@ -67,11 +68,23 @@ leaveout <- function(data) {
   return(tmp)
 }
 
+normalize <- function(data) {
+
+    for(i in 1:ncol(data))
+        if(is.numeric(data[,i]))
+            data[,i] = (data[,i] - min(data[,i]))/(max(data[,i]) - min(data[,i]))
+    data
+}
+
 REGRESSORS = c("ANN", "DWNN", "RF", "SVR", "LM", "Default")
 
 main <- function(file) {
 
-  data = scale(read.csv(file, sep=";"))
+  data = read.csv(file, sep=";")
+  data[is.na(data)] = 0
+
+  data = normalize(data)
+
   tmp = leaveout(data)
 
   aux = mapply(function(tran, test) {

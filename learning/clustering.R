@@ -5,7 +5,7 @@ require(parallel)
 cluster <- function(data, k) {
 
     aux = mclapply(k, mc.cores=4, function(i) {
-        sil = sapply(1:10, function(j) {
+        sil = sapply(1:1, function(j) {
             tmp = kmeans(data, i)
             aux = silhouette(tmp$cluster, daisy(data))
             mean(aux[,3])
