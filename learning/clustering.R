@@ -31,9 +31,28 @@ scatter <- function(data) {
     plot(data[,1:tmp])
 }
 
+form <- function(x) {
+  att <- paste(colnames(x), collapse="+")
+  stats::formula(paste("~ 0 +", att, sep=" "))
+}
+
+binarize <- function(x) {
+  data.frame(stats::model.matrix(form(x), x))
+}
+
+normalize <- function(data) {
+
+    for(i in 1:ncol(data))
+        if(is.numeric(data[,i]))
+            data[,i] = (data[,i] - min(data[,i]))/(max(data[,i]) - min(data[,i]))
+    data
+}
+
+
 main <- function(file, k=seq(2, 100, by=1)) {
 
-    data = scale(read.csv(file, sep=";"))
+    data = normalize(read.csv(file, sep=";"))
+    data = binarize(data)
 
     # clustering
     aux = cluster(data, k)
@@ -46,4 +65,4 @@ main <- function(file, k=seq(2, 100, by=1)) {
 
 
 #execute
-main(file)
+#main(file)
