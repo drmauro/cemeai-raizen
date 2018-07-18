@@ -1,7 +1,5 @@
 data = read.csv('../data/2017-2016/raizen_meteo.csv', sep=';')
 
-data = data
-
 data = data[,-1]
 data = data[,-1]
 data = data[,-ncol(data)]
@@ -23,6 +21,7 @@ data$Ambiente[data$Ambiente == "mE"] = "E"
 data$Ambiente[data$Ambiente == "mF"] = "F"
 data$Ambiente[data$Ambiente == "mG"] = "G"
 data$Ambiente[data$Ambiente == "ADF"] = NA
+aux = rep(0, nrow(data))
 aux[data$Ambiente == "A"] = 1
 aux[data$Ambiente == "B"] = 2
 aux[data$Ambiente == "C"] = 3
