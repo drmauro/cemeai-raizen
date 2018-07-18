@@ -48,10 +48,12 @@ normalize <- function(data) {
     data
 }
 
-
 main <- function(file, k=seq(2, 100, by=1)) {
 
-    data = normalize(read.csv(file, sep=";"))
+    data = read.csv(file, sep=";")
+    data[is.na(data)] = 0
+
+    data = normalize(data)
     data = binarize(data)
 
     # clustering
