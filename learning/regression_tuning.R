@@ -312,7 +312,7 @@ evaluation <- function(tran, test) {
   })
 }
 
-cfold <- function(data, nfold=2) {
+cfold <- function(data, nfold=10) {
 
   data = data[sample(1:nrow(data), replace=FALSE),]
   id = rep(1:nfold, length.out=nrow(data))
