@@ -87,6 +87,11 @@ cfold <- function(data) {
   return(tmp)
 }
 
+form <- function(x) {
+  att <- paste(colnames(x), collapse="+")
+  stats::formula(paste("~ 0 +", att, sep=" "))
+}
+
 normalize <- function(data) {
 
   for(i in 1:ncol(data))
