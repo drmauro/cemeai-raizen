@@ -4,6 +4,21 @@ require(randomForest)
 require(rpart)
 
 REGRESSORS = c("DWNN", "CART", "RF", "SVR", "LM", "DF1")
+REGRESSORS = c("XGB", "DF1")
+
+XGB <- function(tran, test) {                                                                                                                 
+   print("XGB")                                                                                                                               
+   target_id = -2                                                                                                                             
+   print('Training')
+   tran = binarize(tran)
+   test = binarize(test)
+   bstDense = xgboost(data = as.matrix(tran[,-target_id]),                                                                                    
+                      label = tran$Perc_Falha, max_depth = 2, eta = 1,                                                                        
+                      nthread = 3, nrounds = 2, objective = "binary:logistic")                                                                
+   print('Testing')                                                                                                                           
+   pred = predict(bstDense, as.matrix(test[,target_id]))                                                                                      
+   pred                                                                                                                                       
+} 
 
 DWNN <- function(tran, test) {
   model = kknn(Perc_Falha ~., tran, test, kernel="gaussian")
