@@ -7,14 +7,12 @@ require(xgboost)
 REGRESSORS = c("DWNN", "CART", "RF", "SVR", "XGB", "LM", "DF1", "DF2")
 
 XGB <- function(tran, test) {
-  target_id = -2
-  print('Training')
   tran = binarize(tran)
   test = binarize(test)
-  bstDense = xgboost(data = as.matrix(tran[,-target_id]),
+  bstDense = xgboost(data = as.matrix(tran[,-1]),
     label = tran$Perc_Falha, max_depth = 2, eta = 1,
     nthread = 3, nrounds = 2, objective = "binary:logistic", verbose=0)
-  pred = predict(bstDense, as.matrix(test[,target_id]))
+  pred = predict(bstDense, as.matrix(test[,-1]))
   pred
 }
 
@@ -99,13 +97,20 @@ normalize <- function(data) {
   return(data)
 }
 
+remove <- function(data) {
+  data[data$Perc_Falha >= 0.3,]
+}
+
 main <- function(file) {
 
   data = read.csv(file, sep=";")
   data[is.na(data)] = 0
 
-  data = normalize(data)
-  tmp = cfold(data)
+  df = normalize(data)
+  df$Perc_Falha = data$Perc_Falha
+  data = df
+
+  tmp = cfold(df)
 
   aux = mapply(function(tran, test) {
     evaluation(tran, test)
@@ -114,10 +119,9 @@ main <- function(file) {
   tmp = min(sapply(aux, nrow))
   aux = Reduce("+", lapply(aux, "[", 1:tmp,))/10
 
-  boxplot(aux, outline=FALSE)
+  pdf(paste("mse.pdf", sep="."))
+    boxplot(aux, xlab="Regressors", ylab="MSE", main=paste("Performance of the regressors", sep=""), outline=FALSE)
+  dev.off()
 }
 
-
-
 set.seed(1234)
-main("data/raizen.csv")
