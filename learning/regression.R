@@ -1,14 +1,7 @@
 require(e1071)
 require(kknn)
 require(randomForest)
-require(RWeka)
-
-MLP = make_Weka_classifier("weka/classifiers/functions/MultilayerPerceptron")
-
-ANN <- function(tran, test) {
-  model = MLP(Perc_Falha ~ ., tran)
-  as.numeric(predict(model, test))
-} 
+require(rpart)
 
 DWNN <- function(tran, test) {
   model = kknn(Perc_Falha ~., tran, test, kernel="gaussian")
@@ -30,11 +23,6 @@ SVR <- function(tran, test) {
   as.numeric(predict(model, test))
 }
 
-LM <- function(tran, test) {
-  model = lm(Perc_Falha ~., tran)
-  as.numeric(predict(model, test))
-}
-
 Default <- function(tran, test) {
   mean(tran[,"Perc_Falha"])
 }
@@ -50,33 +38,25 @@ evaluation <- function(tran, test) {
   })
 }
 
-leaveout <- function(data) {
+houdout <- function(data) {
 
-  id = 1:nrow(data)
-
-  tran = lapply(1:nrow(data), function(i) {
-    subset(data, id %in% setdiff(1:nrow(data), i))
-  })
-
-  test = lapply(1:nrow(data), function(i) {
-    subset(data, id %in% i)
-  })
+  aux = sample(1:nrow(data), nrow(data)/3, replace=F)
 
   tmp = list()
-  tmp$tran = tran
-  tmp$test = test
+  tmp$tran = data[setdiff(1:nrow(data), aux),]
+  tmp$test = data[aux,]
   return(tmp)
 }
 
 normalize <- function(data) {
 
-    for(i in 1:ncol(data))
-        if(is.numeric(data[,i]))
-            data[,i] = (data[,i] - min(data[,i]))/(max(data[,i]) - min(data[,i]))
-    data
+  for(i in 1:ncol(data))
+    if(is.numeric(data[,i]))
+      data[,i] = (data[,i] - min(data[,i]))/(max(data[,i]) - min(data[,i]))
+  return(data)
 }
 
-REGRESSORS = c("ANN", "DWNN", "RF", "SVR", "LM", "Default")
+REGRESSORS = c("DWNN", "CART", "RF", "SVR", "Default")
 
 main <- function(file) {
 
@@ -85,7 +65,7 @@ main <- function(file) {
 
   data = normalize(data)
 
-  tmp = leaveout(data)
+  tmp = houdout(data)
 
   aux = mapply(function(tran, test) {
     evaluation(tran, test)
