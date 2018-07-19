@@ -3,6 +3,8 @@ require(kknn)
 require(randomForest)
 require(rpart)
 
+REGRESSORS = c("DWNN", "CART", "RF", "SVR", "LM", "DF1")
+
 DWNN <- function(tran, test) {
   model = kknn(Perc_Falha ~., tran, test, kernel="gaussian")
   model$fitted.values
@@ -23,12 +25,25 @@ SVR <- function(tran, test) {
   as.numeric(predict(model, test))
 }
 
-Default <- function(tran, test) {
+LM <- function(tran, test) {
+  model = lm(Perc_Falha ~., binarize(tran))
+  as.numeric(predict(model, binarize(test)))
+}
+
+DF1 <- function(tran, test) {
   mean(tran[,"Perc_Falha"])
+}
+
+DF2 <- function(tran, test) {
+  median(tran[,"Perc_Falha"])
 }
 
 mse <- function(test, pred) {
   as.numeric((pred - test[,"Perc_Falha"])^2)
+}
+
+binarize <- function(x) {
+  data.frame(stats::model.matrix(form(x), x))
 }
 
 evaluation <- function(tran, test) {
@@ -38,13 +53,22 @@ evaluation <- function(tran, test) {
   })
 }
 
-houdout <- function(data) {
+cfold <- function(data) {
 
-  aux = sample(1:nrow(data), nrow(data)/3, replace=F)
+  id = rep(1:10, length.out=nrow(data))
+
+  tran = lapply(1:10, function(i) {
+    subset(data, id %in% setdiff(1:10, i))
+  })
+
+  test = lapply(1:10, function(i) {
+    subset(data, id %in% i)
+  })
 
   tmp = list()
-  tmp$tran = data[setdiff(1:nrow(data), aux),]
-  tmp$test = data[aux,]
+  tmp$data = data
+  tmp$tran = tran
+  tmp$test = test
   return(tmp)
 }
 
@@ -56,20 +80,20 @@ normalize <- function(data) {
   return(data)
 }
 
-REGRESSORS = c("DWNN", "CART", "RF", "SVR", "Default")
-
 main <- function(file) {
 
   data = read.csv(file, sep=";")
   data[is.na(data)] = 0
 
   data = normalize(data)
-
-  tmp = houdout(data)
+  tmp = cfold(data)
 
   aux = mapply(function(tran, test) {
     evaluation(tran, test)
   }, tran=tmp$tran, test=tmp$test)
 
-  boxplot(t(aux))
+  tmp = min(sapply(aux, nrow))
+  aux = Reduce("+", lapply(aux, "[", 1:tmp,))/10
+
+  boxplot(aux, outline=FALSE)
 }
