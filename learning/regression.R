@@ -2,19 +2,18 @@ require(e1071)
 require(kknn)
 require(randomForest)
 require(rpart)
+require(xgboost)
 
-REGRESSORS = c("DWNN", "CART", "RF", "SVR", "LM", "DF1")
+REGRESSORS = c("DWNN", "CART", "RF", "SVR", "XGB", "LM", "DF1", "DF2")
 
 XGB <- function(tran, test) {
-  print("XGB")
   target_id = -2
   print('Training')
   tran = binarize(tran)
   test = binarize(test)
   bstDense = xgboost(data = as.matrix(tran[,-target_id]),
-                     label = tran$Perc_Falha, max_depth = 2, eta = 1,
-                     nthread = 3, nrounds = 2, objective = "binary:logistic")
-  print('Testing')
+    label = tran$Perc_Falha, max_depth = 2, eta = 1,
+    nthread = 3, nrounds = 2, objective = "binary:logistic", verbose=0)
   pred = predict(bstDense, as.matrix(test[,target_id]))
   pred
 }
@@ -69,6 +68,7 @@ evaluation <- function(tran, test) {
 
 cfold <- function(data) {
 
+  data = data[sample(1:nrow(data), replace=FALSE),]
   id = rep(1:10, length.out=nrow(data))
 
   tran = lapply(1:10, function(i) {
@@ -116,3 +116,8 @@ main <- function(file) {
 
   boxplot(aux, outline=FALSE)
 }
+
+
+
+set.seed(1234)
+main("data/raizen.csv")
