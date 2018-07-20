@@ -8,8 +8,7 @@ library("parallelMap")
 parallelStartSocket(3)
 
 REGRESSORS = c("DWNN", "CART", "RF", "SVR", "XGB", "LM", "DF1", "DF2")
-# REGRESSORS = c("DWNN", "CART", "DF1")
-ITER = 2
+ITER = 100
 stored.models = list(DWNN=list(), CART=list(), RF=list(), 
                      SVR=list(), XGB=list(), LM=list())
 

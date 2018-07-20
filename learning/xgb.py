@@ -38,7 +38,7 @@ def modelfit(alg, dtrain, dtest, predictors, target, useTrainCV=True, cv_folds=5
     plt.ylabel('Feature Importance Score')
     plt.show()
 
-    return alg, dtest_predictions
+    return alg, dtest_predictions, feat_imp
 
 data = pd.read_csv('../data/raizen.csv', sep=';')
 fac, _ = data.Estagio.factorize()
@@ -55,22 +55,6 @@ data_x = data
 
 X_train, X_test, Y_train, Y_test = train_test_split(
     data_x, data_y, test_size=0.30, random_state=42)
-
-# xgdmat = xgb.DMatrix(X_train, y_train)
-# our_params = {'eta':0.1,'seed':0,'subsample':0.8,'colsample_bytree':0.8,'objective':'reg:linear','max_depth':3,'min_child_weight':1}
-# final_gb = xgb.train(our_params,xgdmat)
-# tesdmat = xgb.DMatrix(X_test)
-# y_pred = final_gb.predict(tesdmat)
-# print(y_pred)
-#
-# testScore = math.sqrt(mean_squared_error(y_test.values, y_pred))
-# print(testScore)
-#
-# solution = pd.DataFrame([y_test.values, y_pred]).T
-# solution = solution.sort_values(0)
-# myplot = solution.plot.scatter(0, 1)
-# myplot.plot()
-# plt.show()
 
 predictors = X_train.columns
 target = 'Perc_Falha'
@@ -89,7 +73,6 @@ xgb1 = XGBClassifier(
 train = pd.concat([X_train, Y_train], axis=1)
 # train = train[:200]
 test = pd.concat([X_test, Y_test], axis=1)
-alg, pred = modelfit(
+alg, pred, feat_imp= modelfit(
     alg=xgb1, dtrain=train, dtest=test, predictors=predictors, target=target)
-
 
