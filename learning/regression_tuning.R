@@ -4,10 +4,13 @@ require(randomForest)
 require(rpart)
 require(xgboost)
 require(mlr)
+library("parallelMap")
+parallelStartSocket(3)
 
 REGRESSORS = c("DWNN", "CART", "RF", "SVR", "XGB", "LM", "DF1", "DF2")
-# REGRESSORS = c("LM")
-ITER = 2
+ITER = 100
+stored.models = list(DWNN=list(), CART=list(), RF=list(), 
+                     SVR=list(), XGB=list(), LM=list())
 
 XGB <- function(tran, test) {
   tran = binarize(tran)
@@ -51,7 +54,11 @@ XGB <- function(tran, test) {
   xgb_model <- train(xgb_tuned_learner, trainTask)
 
   result <- predict(xgb_model, testTask)
-  result$data$response 
+  stored.models$XGB = append(stored.models$XGB, xgb_tuned_learner$par.vals)
+  save(xgb_model,
+       file=paste("learning/models/XGB_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
+  result$data$response
 }
 
 DWNN <- function(tran, test) {
@@ -99,6 +106,9 @@ DWNN <- function(tran, test) {
   dwnn_model <- train(dwnn_tuned_learner, trainTask)
 
   result <- predict(dwnn_model, testTask)
+  save(dwnn_model,
+       file=paste("learning/models/DWNN_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
   result$data$response 
 }
 
@@ -118,12 +128,12 @@ CART <- function(tran, test) {
   rpart_params <- makeParamSet(
     makeIntegerParam("minsplit", lower = 1, upper = 50),
     makeIntegerParam("maxcompete", lower = 1, upper = 10),
-    makeIntegerParam("maxsurrogate", lower = 1, upper = 10),
+    # makeIntegerParam("maxsurrogate", lower = 1, upper = 10),
     makeIntegerParam("maxdepth", lower = 1, upper = 30),
     makeIntegerParam("xval", lower = 1, upper = 30),
-    makeNumericParam("cp", lower = 0, upper = 1),
-    makeDiscreteParam("usesurrogate", values=c(0,1,2)), 
-    makeDiscreteParam("surrogatestyle", values=c(0,1)) 
+    makeNumericParam("cp", lower = 0, upper = 1)
+    # makeDiscreteParam("usesurrogate", values=c(0,1,2)), 
+    # makeDiscreteParam("surrogatestyle", values=c(0,1)) 
   )
   
   control <- makeTuneControlRandom(maxit = ITER)
@@ -144,6 +154,9 @@ CART <- function(tran, test) {
   rpart_model <- train(rpart_tuned_learner, trainTask)
 
   result <- predict(rpart_model, testTask)
+  save(rpart_model,
+       file=paste("learning/models/RPART_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
   result$data$response 
 }
 
@@ -183,9 +196,10 @@ RF <- function(tran, test) {
   rf_model <- train(rf_tuned_learner, trainTask)
 
   result <- predict(rf_model, testTask)
+  save(rf_model,
+       file=paste("learning/models/RF_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
   result$data$response 
-  model = randomForest(Perc_Falha ~., tran)
-  as.numeric(predict(model, test))
 }
 
 SVR <- function(tran, test) {
@@ -226,6 +240,9 @@ SVR <- function(tran, test) {
   svr_model <- train(svr_tuned_learner, trainTask)
 
   result <- predict(svr_model, testTask)
+  save(svr_model,
+       file=paste("learning/models/SVR_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
   result$data$response 
 
 }
@@ -264,6 +281,9 @@ LM <- function(tran, test) {
   lm_model <- train(lm_tuned_learner, trainTask)
 
   result <- predict(lm_model, testTask)
+  save(lm_model,
+       file=paste("learning/models/LM_",
+                  as.integer(as.POSIXct( Sys.time() )), ".RData", sep=''))
   result$data$response 
 
 }
@@ -336,13 +356,16 @@ main <- function(file) {
     evaluation(tran, test)
   }, tran=tmp$tran, test=tmp$test)
 
+
+  save(aux, file='learning/result_aux1.RData')
+  
   tmp = min(sapply(aux, nrow))
   aux = Reduce("+", lapply(aux, "[", 1:tmp,))/10
 
+  save(aux, file='learning/result_aux2.RData')
   boxplot(aux, outline=FALSE)
 }
 
-
-
 set.seed(1234)
 main("data/raizen.csv")
+parallelStop()
