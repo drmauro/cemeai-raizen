@@ -116,8 +116,7 @@ main <- function(file) {
     evaluation(tran, test)
   }, tran=tmp$tran, test=tmp$test)
 
-  tmp = min(sapply(aux, nrow))
-  aux = Reduce("+", lapply(aux, "[", 1:tmp,))/10
+  aux = do.call("rbind", aux)
 
   pdf(paste("mse.pdf", sep="."))
     boxplot(aux, xlab="Regressors", ylab="MSE", main=paste("Performance of the regressors", sep=""), outline=FALSE)
